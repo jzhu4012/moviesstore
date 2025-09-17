@@ -85,4 +85,21 @@
     </div>
   </div>
 </div>
+{% if user.is_authenticated %}
+<div class="text-center mt-4">
+  <div class="col-md-6 mx-auto mb-3">
+    {% if template_data.is_hidden %}
+      <form method="POST" action="{% url 'movies.unhide_movie' id=template_data.movie.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-success">Unhide this movie</button>
+      </form>
+    {% else %}
+      <form method="POST" action="{% url 'movies.hide_movie' id=template_data.movie.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">Hide this movie</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 {% endblock content %}
