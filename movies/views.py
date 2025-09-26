@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Movie, Review, HiddenMovies
+from .models import Movie, Review, HiddenMovies, Petition, PetitionVote
 from django.contrib.auth.decorators import login_required
+from .forms import PetitionForm
 
 def index(request):
     search_term = request.GET.get('search')
@@ -93,3 +94,45 @@ def hidden_movies(request):
         'is_hidden' : True
     }
     return render(request, 'movies/hidden_movies.html', {'template_data': template_data})
+
+def petitions(request):
+    petitions = Petition.objects.order_by("-created_at")
+    template_data = {
+        "title": "Petitions",
+        "petitions": petitions,
+    }
+    return render(request, "movies/petitions.html", {"template_data": template_data})
+
+@login_required
+def create_petition(request):
+    if request.method == "POST":
+        form = PetitionForm(request.POST)
+        if form.is_valid():
+            petition = form.save(commit=False)
+            petition.created_by = request.user
+            existing = Petition.objects.filter(title__iexact=petition.title).first()
+            if existing:
+                return redirect("movies.petition", pk=existing.pk)
+            petition.save()
+            return redirect("movies.petition", pk=petition.pk)
+    else:
+        form = PetitionForm()
+    return render(request, "movies/create_petition.html", {"form": form})
+
+def petition(request, pk):
+    petition = get_object_or_404(Petition, pk=pk)
+    user_voted = False
+
+    if request.user.is_authenticated:
+        user_voted = PetitionVote.objects.filter(petition=petition, user=request.user).exists()
+
+    if request.method == "POST" and request.user.is_authenticated and not user_voted:
+        PetitionVote.objects.create(petition=petition, user=request.user)
+        return redirect("movies.petition", pk=pk)
+
+    template_data = {
+        "title": petition.title,
+        "petition": petition,
+        "user_voted": user_voted
+    }
+    return render(request, "movies/petition.html", {"template_data": template_data})

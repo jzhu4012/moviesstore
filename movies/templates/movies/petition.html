@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto my-8 px-4">
+    <h2 class="text-2xl font-bold mb-4">{{ template_data.petition.title }}</h2>
+    <p class="mb-4 text-gray-700">{{ template_data.petition.description|default:"No description provided." }}</p>
+
+    <p class="mb-2 font-semibold">Votes: {{ template_data.petition.vote_count }}</p>
+    <p class="m6 italic text-sm">Status: {{ template_data.petition.status }}</p>
+
+    {% if user.is_authenticated %}
+        {% if template_data.user_voted %}
+            <p class="text-green-600 font-semibold">✅ You already voted for this petition</p>
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-black rounded hover:bg-blue-700">
+                    Vote for this Petition
+                </button>
+            </form>
+        {% endif %}
+    {% else %}
+        <p>You must <a href="{% url 'accounts.login' %}" class="text-blue-600 underline">log in</a> to vote.</p>
+    {% endif %}
+</div>
+{% endblock content %}

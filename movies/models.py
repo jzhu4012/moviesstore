@@ -28,3 +28,28 @@ class HiddenMovies(models.Model):
 
     def __str__(self):
         return str(self.user.username) + ' has hidden ' + self.movie.name
+
+class Petition(models.Model):
+    title = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=[("pending", "Pending"), ("accepted", "Accepted"), ("rejected", "Rejected")],
+        default="pending"
+    )
+
+    def vote_count(self):
+        return self.votes.count()
+
+    def __str__(self):
+        return self.title
+
+class PetitionVote(models.Model):
+    petition = models.ForeignKey(Petition, related_name="votes", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ("petition", "user")
